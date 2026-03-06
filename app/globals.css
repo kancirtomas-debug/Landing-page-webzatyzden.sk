@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* ============================================
+   THEME CONFIGURATION
+   Change these CSS variables to re-theme the entire page.
+   ============================================ */
+:root {
+  /* Primary (buttons, headings) */
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+
+  /* Backgrounds */
+  --bg-white: #ffffff;
+  --bg-light: #f3f4f6;
+  --bg-card: #f3f4f6;
+
+  /* CTA gradient (bottom section) */
+  --cta-gradient-from: #EFE1F9;
+  --cta-gradient-to: #B285E1;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  /* Accent */
+  --accent-yellow: #facc15;
+  --accent-green: #22c55e;
+
+  /* Border */
+  --border-light: #e5e7eb;
+}
+
+/* Register CSS variables as Tailwind theme tokens */
+@theme inline {
+  --font-sans: var(--font-inter);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-bg-white: var(--bg-white);
+  --color-bg-light: var(--bg-light);
+  --color-bg-card: var(--bg-card);
+  --color-cta-from: var(--cta-gradient-from);
+  --color-cta-to: var(--cta-gradient-to);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-accent-green: var(--accent-green);
+  --color-border-light: var(--border-light);
+}
+
+/* Speech bubble triangle on testimonial cards */
+.speech-bubble {
+  position: relative;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 28px;
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 20px solid var(--bg-card);
+}
