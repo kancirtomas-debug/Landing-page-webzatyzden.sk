@@ -23,22 +23,22 @@ const features = [
   {
     title: "100 % vlastníctvo webu a domény",
     text: "Žiadne skryté prenájmy ani držanie vás v šachu. Web je od prvého dňa váš majetok.",
-    icon: `${CDN}/vault-6c5c364e.svg`,
+    icon: "/icons/vault.svg",
   },
   {
     title: "Bezpečnosť a právna ochrana",
     text: "Nasadený SSL certifikát (zelený zámoček) a pripravená základná lišta pre GDPR/Cookies, aby ste sa vyhli zbytočným pokutám.",
-    icon: `${CDN}/shield-check-3d8c7ba2.svg`,
+    icon: "/icons/shield-check.svg",
   },
   {
     title: "Filter na zlých klientov",
     text: "Nasadený a otestovaný kontaktný formulár tak, aby ste z návštevníkov mohli okamžite budovať databázu potenciálnych zákazníkov.",
-    icon: `${CDN}/funnel-22729ab1.svg`,
+    icon: "/icons/funnel.svg",
   },
   {
     title: "Video-manuál na mieru",
     text: "Krátke video, kde vám ukážeme, ako si viete upraviť detaily web stránky, ako pridať fotky či referencie – bez toho, aby ste nám za zmeny platili.",
-    icon: `${CDN}/camera-49e26148.svg`,
+    icon: "/icons/camera.svg",
   },
 ];
 
@@ -216,7 +216,7 @@ export default function Home() {
           {/* Scarcity Indicator */}
           <div className="mb-10 flex items-center justify-center gap-2.5">
             <span className="mr-3 text-sm font-medium text-text-primary">
-              Len pár miest týždenne
+              Len 1 miesto týždenne
             </span>
             {[...Array(5)].map((_, i) => (
               <div
