@@ -184,7 +184,7 @@ function businessEmail(name: string, email: string, phone: string) {
 /* ─── API handler ─── */
 export async function POST(request: Request) {
   try {
-    const { email, name, phone } = await request.json();
+    const { email, name, phone, utm } = await request.json();
 
     const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -208,6 +208,14 @@ export async function POST(request: Request) {
               phone,
               sourcePage: process.env.VERCEL_URL ?? "unknown",
               projectId,
+              ...(utm && {
+                utmSource: utm.utm_source ?? null,
+                utmMedium: utm.utm_medium ?? null,
+                utmCampaign: utm.utm_campaign ?? null,
+                utmContent: utm.utm_content ?? null,
+                utmTerm: utm.utm_term ?? null,
+                fbclid: utm.fbclid ?? null,
+              }),
             },
           });
         }

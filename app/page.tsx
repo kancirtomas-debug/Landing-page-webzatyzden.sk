@@ -1,6 +1,7 @@
 import { Monitor, Calendar, Check, Star, Rocket } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import FbTrack from "./components/fb-track";
 
 const CDN = "http://srv930691.hstgr.cloud:3002/uploads/root";
 
@@ -45,6 +46,7 @@ const features = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-bg-white">
+      <FbTrack event="ViewContent" params={{ content_name: "Landing Page" }} />
       {/* ===== SECTION 1: HERO ===== */}
       <section className="relative overflow-hidden bg-white">
         {/* Purple glow effect */}

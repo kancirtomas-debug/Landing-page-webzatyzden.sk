@@ -1,8 +1,10 @@
 import { Rocket } from "lucide-react";
+import FbTrack from "../components/fb-track";
 
 export default function DotaznikOdoslanyPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#EFE1F9] px-6">
+      <FbTrack event="CompleteRegistration" params={{ content_name: "Dotazník odoslaný" }} />
       <div className="mx-auto max-w-4xl rounded-[3rem] bg-gradient-to-b from-[#EFE1F9] to-[#B285E1] px-8 py-20 text-center sm:px-16 sm:py-28">
         {/* Logo */}
         <div className="mb-16 flex items-center justify-center gap-2">

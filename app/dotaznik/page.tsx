@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { trackEvent, trackCustomEvent } from "@/lib/fbq";
+import { captureUtmParams, getUtmParams } from "@/lib/utm";
 
 const steps = [
   {
@@ -43,6 +45,13 @@ export default function DotaznikPage() {
   const canProceed = formData[step.field].trim() !== "";
 
   const [submitting, setSubmitting] = useState(false);
+  const trackedSteps = useRef(new Set<number>());
+
+  // Capture UTM params + fire InitiateCheckout on form load
+  useEffect(() => {
+    captureUtmParams();
+    trackEvent("InitiateCheckout", { content_name: "Dotazník" });
+  }, []);
 
   const handleNext = async () => {
     if (!canProceed || submitting) return;
@@ -50,15 +59,19 @@ export default function DotaznikPage() {
     if (isLastStep) {
       setSubmitting(true);
       try {
+        const utm = getUtmParams();
         const res = await fetch("/api/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ ...formData, utm }),
         });
 
         if (!res.ok) {
           throw new Error("Failed to send");
         }
+
+        // Fire Lead conversion — this is what Facebook Ads optimizes for
+        trackEvent("Lead", { content_name: "Dotazník", currency: "EUR", value: 0 });
 
         router.push("/dotaznik-odoslany");
       } catch {
@@ -66,7 +79,13 @@ export default function DotaznikPage() {
         setSubmitting(false);
       }
     } else {
-      setCurrentStep((prev) => prev + 1);
+      const nextStep = currentStep + 1;
+      // Track each step progression once for funnel analysis
+      if (!trackedSteps.current.has(nextStep)) {
+        trackedSteps.current.add(nextStep);
+        trackCustomEvent("FormStep", { step: nextStep + 1, field: steps[nextStep].field });
+      }
+      setCurrentStep(nextStep);
     }
   };
 
