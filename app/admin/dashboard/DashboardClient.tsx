@@ -1,7 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Lead {
   id: string;
@@ -33,131 +41,93 @@ function getStatus(value: string) {
   return STATUSES.find((s) => s.value === value) ?? STATUSES[0];
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const s = getStatus(status);
-  return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-medium">
-      <span className={`w-2 h-2 rounded-full ${s.color}`} />
-      {s.label}
-    </span>
-  );
-}
-
-function LeadMenu({
+function StatusDropdown({
   lead,
-  onUpdate,
+  onStatusChange,
+  onNoteChange,
 }: {
   lead: Lead;
-  onUpdate: (id: string, data: { status?: string; note?: string }) => void;
+  onStatusChange: (id: string, status: string) => void;
+  onNoteChange: (id: string, note: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const [showNote, setShowNote] = useState(false);
+  const current = getStatus(lead.status);
+  const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState(lead.note ?? "");
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setShowNote(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  function handleStatusChange(status: string) {
-    onUpdate(lead.id, { status });
-    setOpen(false);
-  }
-
-  function handleNoteSave() {
-    onUpdate(lead.id, { note: noteText });
-    setShowNote(false);
-    setOpen(false);
-  }
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => { setOpen(!open); setShowNote(false); }}
-        className="p-1.5 hover:bg-zinc-700 rounded-lg transition-colors"
-      >
-        <svg className="w-4 h-4 text-zinc-400" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-8 z-20 w-56 bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl overflow-hidden">
-          {!showNote ? (
-            <>
-              <div className="px-3 py-2 border-b border-zinc-700">
-                <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-                  Zmeniť stav
-                </p>
-              </div>
-              {STATUSES.map((s) => (
-                <button
-                  key={s.value}
-                  onClick={() => handleStatusChange(s.value)}
-                  className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-zinc-700 transition-colors ${
-                    lead.status === s.value ? "text-white" : "text-zinc-300"
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${s.color}`} />
-                  {s.label}
-                  {lead.status === s.value && (
-                    <svg className="w-3.5 h-3.5 ml-auto text-[#B285E1]" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-              <div className="border-t border-zinc-700">
-                <button
-                  onClick={() => setShowNote(true)}
-                  className="w-full text-left px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 flex items-center gap-2 transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    <DropdownMenu open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditingNote(false); }}>
+      <DropdownMenuTrigger asChild>
+        <button className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer outline-none">
+          <span className={`w-2 h-2 rounded-full ${current.color}`} />
+          {current.label}
+          <svg className="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        {!editingNote ? (
+          <>
+            <DropdownMenuLabel>Zmeniť stav</DropdownMenuLabel>
+            {STATUSES.map((s) => (
+              <DropdownMenuItem
+                key={s.value}
+                onClick={() => { onStatusChange(lead.id, s.value); setOpen(false); }}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className={`w-2 h-2 rounded-full ${s.color}`} />
+                <span className={lead.status === s.value ? "text-white font-medium" : ""}>{s.label}</span>
+                {lead.status === s.value && (
+                  <svg className="w-3.5 h-3.5 ml-auto text-[#B285E1]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                  {lead.note ? "Upraviť poznámku" : "Pridať poznámku"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="p-3">
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                Poznámka
-              </p>
-              <textarea
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                placeholder="Napr. Zavolať v pondelok..."
-                rows={3}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#7B4BA8] resize-none"
-                autoFocus
-              />
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={handleNoteSave}
-                  className="flex-1 py-1.5 bg-[#7B4BA8] hover:bg-[#6a3f94] text-white text-xs font-medium rounded-lg transition-colors"
-                >
-                  Uložiť
-                </button>
-                <button
-                  onClick={() => setShowNote(false)}
-                  className="flex-1 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs font-medium rounded-lg transition-colors"
-                >
-                  Zrušiť
-                </button>
-              </div>
+                )}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => { e.preventDefault(); setEditingNote(true); }}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {lead.note ? "Upraviť poznámku" : "Pridať poznámku"}
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <div className="p-2" onClick={(e) => e.stopPropagation()}>
+            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-1">
+              Poznámka
+            </p>
+            <textarea
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Napr. Zavolať v pondelok..."
+              rows={3}
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#7B4BA8] resize-none"
+              autoFocus
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => { onNoteChange(lead.id, noteText); setEditingNote(false); setOpen(false); }}
+                className="flex-1 py-1.5 bg-[#7B4BA8] hover:bg-[#6a3f94] text-white text-xs font-medium rounded-lg transition-colors"
+              >
+                Uložiť
+              </button>
+              <button
+                onClick={() => setEditingNote(false)}
+                className="flex-1 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs font-medium rounded-lg transition-colors"
+              >
+                Zrušiť
+              </button>
             </div>
-          )}
-        </div>
-      )}
-    </div>
+          </div>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -178,16 +148,21 @@ export default function DashboardClient() {
       .catch(() => setLoading(false));
   }, []);
 
-  async function handleUpdateLead(id: string, data: { status?: string; note?: string }) {
-    // Optimistic update
-    setLeads((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...data } : l))
-    );
-
+  async function handleStatusChange(id: string, status: string) {
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
     await fetch(`/api/admin/leads/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async function handleNoteChange(id: string, note: string) {
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, note } : l)));
+    await fetch(`/api/admin/leads/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note }),
     });
   }
 
@@ -323,13 +298,12 @@ export default function DashboardClient() {
                       <th className="text-left px-4 py-3 font-medium">Stav</th>
                       <th className="text-left px-4 py-3 font-medium">Poznamka</th>
                       <th className="text-left px-4 py-3 font-medium">UTM</th>
-                      <th className="w-10 px-2"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredLeads.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-12 text-center text-zinc-500">
+                        <td colSpan={7} className="px-4 py-12 text-center text-zinc-500">
                           {search ? "Ziadne vysledky pre tento filter" : "Zatial ziadne leady"}
                         </td>
                       </tr>
@@ -345,16 +319,17 @@ export default function DashboardClient() {
                             <a href={`tel:${lead.phone}`} className="text-[#B285E1] hover:text-[#c9a5f0] transition-colors">{lead.phone}</a>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <StatusBadge status={lead.status} />
+                            <StatusDropdown
+                              lead={lead}
+                              onStatusChange={handleStatusChange}
+                              onNoteChange={handleNoteChange}
+                            />
                           </td>
                           <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">
                             {lead.note || <span className="text-zinc-600">-</span>}
                           </td>
                           <td className="px-4 py-3 text-zinc-500 whitespace-nowrap text-xs">
                             {lead.utmSource || "-"}
-                          </td>
-                          <td className="px-2 py-3">
-                            <LeadMenu lead={lead} onUpdate={handleUpdateLead} />
                           </td>
                         </tr>
                       ))
