@@ -73,6 +73,8 @@ export default function DotaznikPage() {
         // Fire Lead conversion — this is what Facebook Ads optimizes for
         trackEvent("Lead", { content_name: "Dotazník", currency: "EUR", value: 0 });
 
+        // Small delay to ensure the fbq beacon sends before navigation
+        await new Promise((resolve) => setTimeout(resolve, 300));
         router.push("/dotaznik-odoslany");
       } catch {
         alert("Nepodarilo sa odoslať formulár. Skúste to prosím znova.");

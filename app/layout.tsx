@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sk" className={inter.variable}>
-      <head>
+      <body className="font-sans antialiased">
         <Script
           id="meta-pixel"
           strategy="afterInteractive"
@@ -47,8 +47,8 @@ export default function RootLayout({
             src="https://www.facebook.com/tr?id=1902012940454671&ev=PageView&noscript=1"
           />
         </noscript>
-      </head>
-      <body className="font-sans antialiased">{children}</body>
+        {children}
+      </body>
     </html>
   );
 }

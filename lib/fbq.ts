@@ -25,15 +25,21 @@ type FbqStandardEvent =
   | "ViewContent";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const fbq: ((...args: any[]) => void) | undefined;
+type Fbq = (...args: any[]) => void;
+
+declare global {
+  interface Window {
+    fbq?: Fbq;
+  }
+}
 
 /** Fire a standard Meta Pixel event. Safe to call server-side (no-ops). */
 export function trackEvent(
   event: FbqStandardEvent,
   params?: Record<string, string | number | boolean>,
 ) {
-  if (typeof window !== "undefined" && typeof fbq !== "undefined") {
-    fbq("track", event, params);
+  if (typeof window !== "undefined" && window.fbq) {
+    window.fbq("track", event, params);
   }
 }
 
@@ -42,7 +48,7 @@ export function trackCustomEvent(
   event: string,
   params?: Record<string, string | number | boolean>,
 ) {
-  if (typeof window !== "undefined" && typeof fbq !== "undefined") {
-    fbq("trackCustom", event, params);
+  if (typeof window !== "undefined" && window.fbq) {
+    window.fbq("trackCustom", event, params);
   }
 }
