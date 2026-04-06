@@ -58,7 +58,7 @@ function StatusDropdown({
   return (
     <DropdownMenu open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditingNote(false); }}>
       <DropdownMenuTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer outline-none">
+        <button className="w-full inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer outline-none">
           <span className={`w-2 h-2 rounded-full ${current.color}`} />
           {current.label}
           <svg className="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,7 +380,7 @@ export default function DashboardClient() {
                           <td className="px-4 py-3 whitespace-nowrap">
                             <a href={`tel:${lead.phone}`} className="text-[#B285E1] hover:text-[#c9a5f0] transition-colors">{lead.phone}</a>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-4 py-3 whitespace-nowrap min-w-[180px]">
                             <StatusDropdown
                               lead={lead}
                               onStatusChange={handleStatusChange}
