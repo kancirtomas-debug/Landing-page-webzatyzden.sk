@@ -12,7 +12,14 @@ app/
   dotaznik/page.tsx     ← Multi-step lead capture form (client component)
   dotaznik-odoslany/page.tsx ← Form success/thank-you page
   gdpr/page.tsx         ← Privacy policy page
+  admin/page.tsx        ← PIN login page (client component)
+  admin/dashboard/page.tsx ← Dashboard server component (stats + auth check)
+  admin/dashboard/DashboardClient.tsx ← Dashboard UI (client component)
   api/send/route.ts     ← Form submission API (saves to DB + sends emails)
+  api/admin/verify/route.ts  ← PIN verification + cookie set
+  api/admin/leads/route.ts   ← Leads JSON API with search
+  api/admin/export/route.ts  ← CSV export download
+  api/admin/logout/route.ts  ← Session logout
 lib/prisma.ts           ← Prisma client singleton
 public/avatars/         ← Avatar photos (person1.jpg - person4.jpg)
 ```
@@ -71,6 +78,13 @@ Uses `lucide-react` icons. Current icons: `Rocket` (logo), `Monitor`, `Calendar`
 - `DATABASE_URL` — Supabase pooled connection string
 - `DIRECT_URL` — Supabase direct connection string
 - `PROJECT_ID` — Unique project identifier for lead isolation
+- `ADMIN_PIN` — 4-digit PIN for admin dashboard login (default: `1234`)
+
+### Admin Dashboard
+PIN-protected dashboard at `/admin` for viewing and exporting leads:
+- `/admin` — PIN login page
+- `/admin/dashboard` — Stats + leads table with search and CSV export
+- API routes under `/api/admin/` — verify, leads, export, logout
 
 ### Email Setup
 The app sends two branded HTML emails on form submission:
