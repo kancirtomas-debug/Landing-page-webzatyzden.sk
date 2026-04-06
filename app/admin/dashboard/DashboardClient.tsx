@@ -131,6 +131,68 @@ function StatusDropdown({
   );
 }
 
+function NoteCell({
+  lead,
+  onNoteChange,
+}: {
+  lead: Lead;
+  onNoteChange: (id: string, note: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(lead.note ?? "");
+
+  function handleSave() {
+    onNoteChange(lead.id, text);
+    setEditing(false);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSave();
+    }
+    if (e.key === "Escape") {
+      setText(lead.note ?? "");
+      setEditing(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleSave}
+          placeholder="Napíšte poznámku..."
+          rows={3}
+          autoFocus
+          className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#7B4BA8] resize-none"
+        />
+        <p className="text-[10px] text-zinc-600">Enter = uložiť · Esc = zrušiť</p>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => { setText(lead.note ?? ""); setEditing(true); }}
+      className="w-full text-left cursor-pointer group"
+    >
+      {lead.note ? (
+        <p className="text-sm text-zinc-300 whitespace-pre-wrap break-words leading-relaxed group-hover:text-white transition-colors">
+          {lead.note}
+        </p>
+      ) : (
+        <span className="text-zinc-600 text-sm group-hover:text-zinc-400 transition-colors">
+          + Pridať poznámku
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function DashboardClient() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -325,8 +387,11 @@ export default function DashboardClient() {
                               onNoteChange={handleNoteChange}
                             />
                           </td>
-                          <td className="px-4 py-3 text-zinc-400 max-w-[200px] truncate">
-                            {lead.note || <span className="text-zinc-600">-</span>}
+                          <td className="px-4 py-3 min-w-[250px] max-w-[350px]">
+                            <NoteCell
+                              lead={lead}
+                              onNoteChange={handleNoteChange}
+                            />
                           </td>
                           <td className="px-4 py-3 text-zinc-500 whitespace-nowrap text-xs">
                             {lead.utmSource || "-"}
