@@ -18,6 +18,10 @@ model Lead {
   sourcePage String?
   projectId  String?
 
+  // Status tracking
+  status String @default("new")
+  note   String?
+
   // UTM tracking
   utmSource   String?
   utmMedium   String?
@@ -28,4 +32,5 @@ model Lead {
 
   @@index([projectId])
   @@index([createdAt])
+  @@index([status])
 }
