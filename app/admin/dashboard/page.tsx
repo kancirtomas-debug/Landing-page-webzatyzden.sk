@@ -66,7 +66,14 @@ export default async function DashboardPage() {
     redirect("/admin");
   }
 
-  const [stats, leads] = await Promise.all([getStats(), getLeads()]);
+  let stats: Stats = { total: 0, today: 0, thisWeek: 0, thisMonth: 0 };
+  let leads: LeadRow[] = [];
+
+  try {
+    [stats, leads] = await Promise.all([getStats(), getLeads()]);
+  } catch (error) {
+    console.error("Dashboard data fetch failed:", error);
+  }
 
   return <DashboardClient stats={stats} initialLeads={leads} />;
 }
