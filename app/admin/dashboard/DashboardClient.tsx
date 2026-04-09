@@ -307,7 +307,8 @@ export default function DashboardClient() {
 
   function formatDate(iso: string) {
     const d = new Date(iso);
-    return d.toLocaleDateString("sk-SK", {
+    return d.toLocaleString("sk-SK", {
+      timeZone: "Europe/Bratislava",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
