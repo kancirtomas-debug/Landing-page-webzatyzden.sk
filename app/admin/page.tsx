@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
-  const [pin, setPin] = useState(["", "", "", ""]);
+  const [pin, setPin] = useState(["", "", "", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
@@ -19,12 +19,12 @@ export default function AdminLoginPage() {
     setError("");
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (value && index < 7) {
       inputsRef.current[index + 1]?.focus();
     }
 
-    // Auto-submit when all 4 digits entered
-    if (value && index === 3 && newPin.every((d) => d !== "")) {
+    // Auto-submit when all 8 digits entered
+    if (value && index === 7 && newPin.every((d) => d !== "")) {
       submitPin(newPin.join(""));
     }
   }
@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
     }
     if (e.key === "Enter") {
       const fullPin = pin.join("");
-      if (fullPin.length === 4) {
+      if (fullPin.length === 8) {
         submitPin(fullPin);
       }
     }
@@ -43,8 +43,8 @@ export default function AdminLoginPage() {
 
   function handlePaste(e: React.ClipboardEvent) {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
-    if (pasted.length === 4) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 8);
+    if (pasted.length === 8) {
       const newPin = pasted.split("");
       setPin(newPin);
       submitPin(pasted);
@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
         router.push("/admin/dashboard");
       } else {
         setError("Nesprávny PIN");
-        setPin(["", "", "", ""]);
+        setPin(["", "", "", "", "", "", "", ""]);
         inputsRef.current[0]?.focus();
       }
     } catch {
@@ -88,7 +88,7 @@ export default function AdminLoginPage() {
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Admin Panel</h1>
-          <p className="text-zinc-400 text-sm">Zadajte 4-miestny PIN</p>
+          <p className="text-zinc-400 text-sm">Zadajte 8-miestny PIN</p>
         </div>
 
         {/* PIN inputs */}
@@ -105,7 +105,7 @@ export default function AdminLoginPage() {
               onKeyDown={(e) => handleKeyDown(i, e)}
               onPaste={i === 0 ? handlePaste : undefined}
               disabled={loading}
-              className="w-16 h-18 text-center text-2xl font-bold text-white bg-zinc-800 border-2 border-zinc-700 rounded-xl focus:border-[#7B4BA8] focus:outline-none focus:ring-2 focus:ring-[#7B4BA8]/30 transition-all disabled:opacity-50"
+              className="w-10 h-12 text-center text-xl font-bold text-white bg-zinc-800 border-2 border-zinc-700 rounded-xl focus:border-[#7B4BA8] focus:outline-none focus:ring-2 focus:ring-[#7B4BA8]/30 transition-all disabled:opacity-50"
               autoFocus={i === 0}
             />
           ))}
