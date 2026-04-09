@@ -195,19 +195,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save lead directly to Supabase (shared DB with klienti)
-    const projectId = process.env.PROJECT_ID;
-    if (projectId && process.env.DATABASE_URL) {
+    // Save lead to Supabase — always save when DB is configured, projectId is optional metadata
+    if (process.env.DATABASE_URL) {
       try {
         const { prisma } = await import("@/lib/prisma");
         if (prisma) {
+          // Save to main Lead table (admin dashboard)
           await prisma.lead.create({
             data: {
               name,
               email,
               phone,
               sourcePage: process.env.VERCEL_URL ?? "unknown",
-              projectId,
+              projectId: process.env.PROJECT_ID ?? null,
               ...(utm && {
                 utmSource: utm.utm_source ?? null,
                 utmMedium: utm.utm_medium ?? null,
@@ -218,6 +218,11 @@ export async function POST(request: Request) {
               }),
             },
           });
+          // Save to funnel step 3 table
+          await prisma.$executeRaw`
+            INSERT INTO "step 3" (email, name, phone)
+            VALUES (${email}, ${name}, ${phone})
+          `;
         }
       } catch (err) {
         console.error("Failed to save lead to database:", err);

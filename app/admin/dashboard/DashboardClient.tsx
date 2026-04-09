@@ -193,18 +193,42 @@ function NoteCell({
   );
 }
 
+interface FunnelLead {
+  id: string;
+  created_at: string;
+  email: string;
+  name: string | null;
+  phone: string | null;
+}
+
+const TABS = [
+  { id: "leads" as const, label: "Kompletné", sublabel: "CRM" },
+  { id: "1" as const, label: "Krok 1", sublabel: "Email" },
+  { id: "2" as const, label: "Krok 2", sublabel: "Email + Meno" },
+  { id: "3" as const, label: "Krok 3", sublabel: "Všetci vyplnení" },
+];
+
 export default function DashboardClient() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [funnelData, setFunnelData] = useState<{ step1: FunnelLead[]; step2: FunnelLead[]; step3: FunnelLead[] }>({ step1: [], step2: [], step3: [] });
+  const [activeTab, setActiveTab] = useState<"leads" | "1" | "2" | "3">("leads");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/admin/leads")
-      .then((res) => res.json())
-      .then((data) => {
-        setLeads(data.leads ?? []);
+    Promise.all([
+      fetch("/api/admin/leads").then((r) => r.json()),
+      fetch("/api/admin/funnel").then((r) => r.json()),
+    ])
+      .then(([leadsData, funnelRes]) => {
+        setLeads(leadsData.leads ?? []);
+        setFunnelData({
+          step1: funnelRes.step1 ?? [],
+          step2: funnelRes.step2 ?? [],
+          step3: funnelRes.step3 ?? [],
+        });
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -239,6 +263,25 @@ export default function DashboardClient() {
         getStatus(lead.status).label.toLowerCase().includes(q)
     );
   }, [search, leads]);
+
+  const activeFunnelLeads = useMemo(() => {
+    const src = activeTab === "1" ? funnelData.step1 : activeTab === "2" ? funnelData.step2 : funnelData.step3;
+    if (!search.trim()) return src;
+    const q = search.toLowerCase().trim();
+    return src.filter(
+      (l) =>
+        l.email.toLowerCase().includes(q) ||
+        (l.name ?? "").toLowerCase().includes(q) ||
+        (l.phone ?? "").toLowerCase().includes(q)
+    );
+  }, [activeTab, funnelData, search]);
+
+  const tabCounts = {
+    leads: leads.length,
+    "1": funnelData.step1.length,
+    "2": funnelData.step2.length,
+    "3": funnelData.step3.length,
+  };
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -307,6 +350,30 @@ export default function DashboardClient() {
           </div>
         ) : (
           <>
+            {/* Funnel Tabs */}
+            <div className="flex gap-1 mb-8 border-b border-zinc-800 overflow-x-auto">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); setSearch(""); }}
+                  className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                    activeTab === tab.id ? "bg-[#7B4BA8] text-white" : "bg-zinc-800 text-zinc-400"
+                  }`}>
+                    {tabCounts[tab.id]}
+                  </span>
+                  <span className="text-zinc-600 text-xs hidden sm:inline">— {tab.sublabel}</span>
+                  {activeTab === tab.id && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#7B4BA8]" />
+                  )}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {statCards.map((card) => (
                 <div key={card.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
@@ -344,12 +411,55 @@ export default function DashboardClient() {
             </div>
 
             <p className="text-zinc-500 text-sm mb-3">
-              {filteredLeads.length} {filteredLeads.length === 1 ? "lead" : "leadov"}
-              {search && ` pre "${search}"`}
+              {activeTab === "leads" ? (
+                <>{filteredLeads.length} {filteredLeads.length === 1 ? "lead" : "leadov"}{search && ` pre "${search}"`}</>
+              ) : (
+                <>{activeFunnelLeads.length} {activeFunnelLeads.length === 1 ? "záznam" : "záznamov"}{search && ` pre "${search}"`}</>
+              )}
             </p>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
               <div className="overflow-x-auto">
+                {activeTab !== "leads" ? (
+                  /* Funnel step table (simplified) */
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-zinc-800 text-zinc-400">
+                        <th className="text-left px-4 py-3 font-medium">Dátum</th>
+                        <th className="text-left px-4 py-3 font-medium">Email</th>
+                        {(activeTab === "2" || activeTab === "3") && <th className="text-left px-4 py-3 font-medium">Meno</th>}
+                        {activeTab === "3" && <th className="text-left px-4 py-3 font-medium">Telefón</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeFunnelLeads.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-12 text-center text-zinc-500">
+                            {search ? "Žiadne výsledky pre tento filter" : "Zatiaľ žiadne záznamy"}
+                          </td>
+                        </tr>
+                      ) : (
+                        activeFunnelLeads.map((lead) => (
+                          <tr key={lead.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                            <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">{formatDate(lead.created_at)}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <a href={`mailto:${lead.email}`} className="text-[#B285E1] hover:text-[#c9a5f0] transition-colors">{lead.email}</a>
+                            </td>
+                            {(activeTab === "2" || activeTab === "3") && (
+                              <td className="px-4 py-3 font-medium whitespace-nowrap">{lead.name ?? "—"}</td>
+                            )}
+                            {activeTab === "3" && (
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {lead.phone ? <a href={`tel:${lead.phone}`} className="text-[#B285E1] hover:text-[#c9a5f0] transition-colors">{lead.phone}</a> : "—"}
+                              </td>
+                            )}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                ) : (
+                /* Full CRM table */
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-zinc-800 text-zinc-400">
@@ -401,6 +511,7 @@ export default function DashboardClient() {
                     )}
                   </tbody>
                 </table>
+                )}
               </div>
             </div>
 

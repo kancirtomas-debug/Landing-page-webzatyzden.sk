@@ -46,6 +46,15 @@ export default function DotaznikPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const trackedSteps = useRef(new Set<number>());
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the active field on every step change (reliable on mobile + desktop)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [currentStep]);
 
   // Capture UTM params + fire InitiateCheckout on form load
   useEffect(() => {
@@ -86,6 +95,20 @@ export default function DotaznikPage() {
       if (!trackedSteps.current.has(nextStep)) {
         trackedSteps.current.add(nextStep);
         trackCustomEvent("FormStep", { step: nextStep + 1, field: steps[nextStep].field });
+        // Partial lead capture — fire-and-forget, never blocks UX
+        if (currentStep === 0) {
+          fetch("/api/partial", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, step: 1, utm: getUtmParams() }),
+          }).catch(() => {});
+        } else if (currentStep === 1) {
+          fetch("/api/partial", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, name: formData.name, step: 2, utm: getUtmParams() }),
+          }).catch(() => {});
+        }
       }
       setCurrentStep(nextStep);
     }
@@ -117,6 +140,7 @@ export default function DotaznikPage() {
           <div className="rounded-2xl bg-white p-2">
             {step.field === "phone" ? (
               <PhoneInput
+                key={currentStep}
                 international
                 defaultCountry="SK"
                 value={formData.phone}
@@ -124,10 +148,14 @@ export default function DotaznikPage() {
                   setFormData((prev) => ({ ...prev, phone: value || "" }))
                 }
                 onKeyDown={handleKeyDown}
+                inputRef={inputRef}
                 className="w-full rounded-xl bg-white px-4 py-3 text-lg text-text-primary outline-none [&>input]:border-none [&>input]:bg-transparent [&>input]:text-lg [&>input]:outline-none"
               />
             ) : (
               <input
+                key={currentStep}
+                ref={inputRef}
+                autoFocus
                 type={step.type}
                 placeholder={step.placeholder}
                 value={formData[step.field]}
@@ -138,7 +166,6 @@ export default function DotaznikPage() {
                   }))
                 }
                 onKeyDown={handleKeyDown}
-                autoFocus
                 className="w-full rounded-xl bg-white px-4 py-3 text-lg text-text-primary placeholder-text-muted outline-none"
               />
             )}
