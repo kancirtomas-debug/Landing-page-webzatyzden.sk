@@ -46,7 +46,26 @@ export default function DotaznikPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const trackedSteps = useRef(new Set<number>());
+  const savedPartials = useRef(new Set<number>());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  function savePartial(step: number) {
+    if (savedPartials.current.has(step)) return;
+    savedPartials.current.add(step);
+    if (step === 1 && formData.email) {
+      fetch("/api/partial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, step: 1, utm: getUtmParams() }),
+      }).catch(() => {});
+    } else if (step === 2 && formData.email && formData.name) {
+      fetch("/api/partial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, name: formData.name, step: 2, utm: getUtmParams() }),
+      }).catch(() => {});
+    }
+  }
 
   // Auto-focus the active field on every step change (reliable on mobile + desktop)
   useEffect(() => {
@@ -96,19 +115,8 @@ export default function DotaznikPage() {
         trackedSteps.current.add(nextStep);
         trackCustomEvent("FormStep", { step: nextStep + 1, field: steps[nextStep].field });
         // Partial lead capture — fire-and-forget, never blocks UX
-        if (currentStep === 0) {
-          fetch("/api/partial", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email, step: 1, utm: getUtmParams() }),
-          }).catch(() => {});
-        } else if (currentStep === 1) {
-          fetch("/api/partial", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: formData.email, name: formData.name, step: 2, utm: getUtmParams() }),
-          }).catch(() => {});
-        }
+        if (currentStep === 0) savePartial(1);
+        else if (currentStep === 1) savePartial(2);
       }
       setCurrentStep(nextStep);
     }
@@ -165,6 +173,10 @@ export default function DotaznikPage() {
                     [step.field]: e.target.value,
                   }))
                 }
+                onBlur={() => {
+                  if (currentStep === 0 && formData.email) savePartial(1);
+                  else if (currentStep === 1 && formData.name) savePartial(2);
+                }}
                 onKeyDown={handleKeyDown}
                 className="w-full rounded-xl bg-white px-4 py-3 text-lg text-text-primary placeholder-text-muted outline-none"
               />
