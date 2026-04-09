@@ -8,16 +8,19 @@ export async function GET() {
     timestamp: new Date().toISOString(),
   };
 
+  let dbError: string | null = null;
+
   if (prisma) {
     try {
       await prisma.lead.count();
       checks.database = true;
-    } catch {
+    } catch (err) {
       checks.database = false;
+      dbError = err instanceof Error ? err.message : String(err);
     }
   }
 
   const allOk = checks.server && checks.database;
 
-  return NextResponse.json(checks, { status: allOk ? 200 : 503 });
+  return NextResponse.json({ ...checks, dbError }, { status: allOk ? 200 : 503 });
 }
